@@ -8,8 +8,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-//https://shahedbd.medium.com/net-7-web-api-jwt-authentication-and-role-based-authorization-f2ff81f69cd4
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddTransient<IAuthService, AuthService>();
