@@ -10,24 +10,36 @@ namespace JWTTokenAPI.Controllers
 {
     [Route("api/userlist")]
     [ApiController]
-    [Authorize(Roles = UserRoles.AdministratorOrSuperAdministrator)]
+    [Authorize(Roles = "SAdmin")]
     //[Authorize]
-    public class UserListController : ControllerBase
+    public class UserClaimsController : ControllerBase
     {
         private readonly IAuthService _authService;
         private readonly ILogger<AuthenticationController> _logger;
-        public UserListController(IAuthService authService, ILogger<AuthenticationController> logger)
+        public UserClaimsController(IAuthService authService, ILogger<AuthenticationController> logger)
         {
             _authService = authService;
             _logger = logger;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Get()
-        {
-            var (status, message) = await _authService.UserList();
+              
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Get(string id)
+        {           
+
+            var (status, message) = await _authService.UserClaim(id);
             return Ok(message);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> Post(RolesModel id)
+        {
+
+            var (status, message) = await _authService.SetClaims(id);
+            return Ok(message);
+        }
+
+
     }
 }
 

@@ -5,6 +5,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
+using Microsoft.EntityFrameworkCore;
+
 namespace JWTTokenAPI.Services
 {
     public class AuthService : IAuthService
@@ -19,8 +21,44 @@ namespace JWTTokenAPI.Services
             _configuration = configuration;
 
         }
+
+        public async Task<(int, List<ApplicationUser>)> UserList()
+        {
+            var userList = await userManager.Users.ToListAsync();
+            return (1, userList);
+        }
+
+        public async Task<(int, IList<string>)> UserClaim(string id)
+        {
+            var user = await userManager.FindByIdAsync(id);
+            var roles = await userManager.GetRolesAsync(user);
+            //var claims= await userManager.GetClaimsAsync(user);
+            return (1, roles);           
+        }
+        public async Task<(int, string)> SetClaims(RolesModel id)
+        {
+            var user = await userManager.FindByIdAsync(id.Id);
+            var roles = await userManager.GetRolesAsync(user);
+
+            await userManager.RemoveFromRolesAsync(user, roles);
+
+           foreach (var role in id.Roles)
+            {
+                if (!await roleManager.RoleExistsAsync(role))
+                    await roleManager.CreateAsync(new IdentityRole(role));
+
+                if (await roleManager.RoleExistsAsync(role))
+                    await userManager.AddToRoleAsync(user, role);
+
+            }
+            return (1, "");
+        }
+
         public async Task<(int, string)> Registeration(RegistrationModel model, string role)
         {
+            
+            
+            
             var userExists = await userManager.FindByNameAsync(model.Username);
             if (userExists != null)
                 return (0, "User already exists");
@@ -37,12 +75,19 @@ namespace JWTTokenAPI.Services
             if (!createUserResult.Succeeded)
                 return (0, "User creation failed! Please check user details and try again.");
 
-            if (!await roleManager.RoleExistsAsync(role))
+            /*if (!await roleManager.RoleExistsAsync(role))
                 await roleManager.CreateAsync(new IdentityRole(role));
 
             if (await roleManager.RoleExistsAsync(role))
-                await userManager.AddToRoleAsync(user, role);
+                await userManager.AddToRoleAsync(user, role);*/
 
+            if (user.UserName.Equals("Admin"))
+            {
+                if (!await roleManager.RoleExistsAsync(UserRoles.SAdmin))
+                    await roleManager.CreateAsync(new IdentityRole(UserRoles.SAdmin));
+                if (await roleManager.RoleExistsAsync(UserRoles.SAdmin))
+                    await userManager.AddToRoleAsync(user, UserRoles.SAdmin);
+            }
             return (1, "User created successfully!");
         }
 
